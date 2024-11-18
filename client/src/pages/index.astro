@@ -1,20 +1,21 @@
 ---
+import PopularBooksSection from "@/components/common/PopularBooksSection";
 import Layout from "../layouts/Layout.astro";
+import HeaderSection from "@/components/common/HeaderSection";
+import SearchBar from "@/components/common/SearchBar";
 ---
 
 <Layout title="Welcome to Astro.">
-    <main>
-        <h1>Hello World!</h1>
+    <main class="main container">
+        <SearchBar className="mb-10" />
+        <HeaderSection className="mb-10" />
+        <PopularBooksSection className="mb-5" />
     </main>
 </Layout>
 
 <style>
-    main {
-        margin: auto;
-        padding: 1rem;
-        width: 800px;
-        max-width: calc(100% - 2rem);
-        font-size: 20px;
-        line-height: 1.6;
+    .main {
+        background-color: rgba(240, 238, 226, 1);
+        padding: 30px 0px;
     }
 </style>
