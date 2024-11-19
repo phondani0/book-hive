@@ -1,61 +1,106 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func getHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /hello request\n")
-	io.WriteString(w, "Hello, Abhishek!\n")
+var client *mongo.Client
+var db *mongo.Database
+
+// Initialize MongoDB client globally
+func initMongo() {
+	// Load environment variables from .env file (optional)
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	// Get MongoDB URI from the environment variable
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		log.Fatal("MONGO_URI environment variable is not set")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var err error
+	client, err = mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+
+	println("Connected to MongoDB")
+	db = client.Database("bookhive")
 }
 
 func main() {
+	initMongo()
 
-	http.HandleFunc("/hello", getBooks)
+	http.HandleFunc("/hello", getHello)
+	http.HandleFunc("/books", getBooksHandler)
 
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("server started at port 4500")
+	err := http.ListenAndServe(":4500", nil)
+
+	if err != nil {
+		fmt.Printf("error starting server: %v\n", err)
+	}
 }
 
-// create an http server that listens on port 4500 and has a handler which will return books data with full details
-func getBooks(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /books request\n")
-	books := []struct {
-		ID          string  `json:"id"`
-		Title       string  `json:"title"`
-		Author      string  `json:"author"`
-		Price       float64 `json:"price"`
-		ISBN        string  `json:"isbn"`
-		PublishYear int     `json:"publishYear"`
-	}{
-		{
-			ID:          "1",
-			Title:       "The Great Gatsby",
-			Author:      "F. Scott Fitzgerald",
-			Price:       9.99,
-			ISBN:        "978-0743273565",
-			PublishYear: 1925,
-		},
-		{
-			ID:          "2",
-			Title:       "To Kill a Mockingbird",
-			Author:      "Harper Lee",
-			Price:       12.99,
-			ISBN:        "978-0446310789",
-			PublishYear: 1960,
-		},
-		{
-			ID:          "3",
-			Title:       "1984",
-			Author:      "George Orwell",
-			Price:       10.99,
-			ISBN:        "978-0451524935",
-			PublishYear: 1949,
-		},
+func getHello(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("got /hello request\n")
+	io.WriteString(w, "Hello, Hello!\n")
+}
+
+func getBooksHandler(w http.ResponseWriter, r *http.Request) {
+	// Use the global db object to access the collection
+	collection := db.Collection("books")
+
+	// Define a filter (optional)
+	// filter := bson.D{{"publication_year", bson.D{{"$gte", "2020"}}}}
+
+	page := 1
+	pageSize := 10
+	skip := (pageSize * (page - 1))
+
+	// Define options (limit, skip, and sorting)
+	options := options.Find().SetLimit(int64(pageSize)).SetSkip(int64(skip))
+	// .SetSort(bson.D{{"title", 1}}) // @TODO: Sort is leading to very slow response
+
+	// Perform the query
+	cursor, err := collection.Find(context.Background(), bson.D{}, options)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching books: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	// Fetch the books into a slice
+	var books []bson.M
+	for cursor.Next(context.Background()) {
+		var book bson.M
+		if err := cursor.Decode(&book); err != nil {
+			http.Error(w, fmt.Sprintf("Error decoding book: %v", err), http.StatusInternalServerError)
+			return
+		}
+		books = append(books, book)
 	}
 
+	// Return the results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(books)
+	if err := json.NewEncoder(w).Encode(books); err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
+	}
 }
