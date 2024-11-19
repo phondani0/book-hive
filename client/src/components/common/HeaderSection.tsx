@@ -3,7 +3,7 @@ import clsx from "clsx";
 const HeaderSection = ({ className }: { className?: string }) => {
     return (
         <section className={clsx(className)}>
-            <h1 className="text-5xl font-bold font-serif">
+            <h1 className="text-5xl font-bold">
                 Welcome to <span className="text-primary">BookHive</span>
             </h1>
             <div className="my-5">

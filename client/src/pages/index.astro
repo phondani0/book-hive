@@ -3,13 +3,19 @@ import PopularBooksSection from "@/components/common/PopularBooksSection";
 import Layout from "../layouts/Layout.astro";
 import HeaderSection from "@/components/common/HeaderSection";
 import SearchBar from "@/components/common/SearchBar";
+import NavBar from "@/components/common/NavBar";
+import BrowseSection from "@/components/common/BrowseSection";
+
+const pathname = new URL(Astro.request.url).pathname;
 ---
 
 <Layout title="Welcome to Astro.">
+    <NavBar className="mt-8" activeRoute={pathname} />
     <main class="main container">
         <SearchBar className="mb-10" />
         <HeaderSection className="mb-10" />
-        <PopularBooksSection className="mb-5" />
+        <PopularBooksSection className="mb-10" />
+        <BrowseSection className="mb-10" />
     </main>
 </Layout>
 
