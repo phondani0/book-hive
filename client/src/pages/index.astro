@@ -3,9 +3,11 @@ import PopularBooksSection from "@/components/common/PopularBooksSection";
 import Layout from "../layouts/Layout.astro";
 import HeaderSection from "@/components/common/HeaderSection";
 import SearchBar from "@/components/common/SearchBar";
+import NavBar from "@/components/common/NavBar";
 ---
 
 <Layout title="Welcome to Astro.">
+    <NavBar className="mt-8" />
     <main class="main container">
         <SearchBar className="mb-10" />
         <HeaderSection className="mb-10" />
