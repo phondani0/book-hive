@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -37,31 +36,29 @@ func initMongo() {
 
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
-	}
-
-	println("Connected to MongoDB")
-	db = client.Database("bookhive")
-}
-
-func main() {
-	initMongo()
-
-	http.HandleFunc("/hello", getHello)
-	http.HandleFunc("/books", getBooksHandler)
-
-	fmt.Println("server started at port 4500")
-	err := http.ListenAndServe(":4500", nil)
 
 	if err != nil {
-		fmt.Printf("error starting server: %v\n", err)
+		log.Fatalf("Failed to initiate MongoDB connection: %v", err)
 	}
+
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB server: %v", err)
+	}
+
+	println("Successfully connected to MongoDB!")
+	db = client.Database(os.Getenv("DATABASE_NAME"))
 }
 
-func getHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /hello request\n")
-	io.WriteString(w, "Hello, Hello!\n")
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,10 +66,15 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	collection := db.Collection("books")
 
 	// Define a filter (optional)
-	// filter := bson.D{{"publication_year", bson.D{{"$gte", "2020"}}}}
+	filter := bson.D{
+		{"publication_year", bson.D{
+			{"$gte", 2020},
+			{"$lt", 2025},
+		}},
+	}
 
 	page := 1
-	pageSize := 10
+	pageSize := 20
 	skip := (pageSize * (page - 1))
 
 	// Define options (limit, skip, and sorting)
@@ -80,7 +82,7 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	// .SetSort(bson.D{{"title", 1}}) // @TODO: Sort is leading to very slow response
 
 	// Perform the query
-	cursor, err := collection.Find(context.Background(), bson.D{}, options)
+	cursor, err := collection.Find(context.Background(), filter, options)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching books: %v", err), http.StatusInternalServerError)
 		return
@@ -98,9 +100,27 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 		books = append(books, book)
 	}
 
+	response := map[string]interface{}{
+		"data":       books,
+		"totalCount": len(books),
+	}
+
 	// Return the results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(books); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
+	}
+}
+
+func main() {
+	initMongo()
+
+	http.Handle("/api/books", corsMiddleware(http.HandlerFunc(getBooksHandler)))
+
+	fmt.Println("Server started at port 4500")
+	err := http.ListenAndServe(":4500", nil)
+
+	if err != nil {
+		fmt.Printf("error starting server: %v\n", err)
 	}
 }

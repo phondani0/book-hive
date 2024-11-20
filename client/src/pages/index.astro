@@ -14,7 +14,7 @@ const pathname = new URL(Astro.request.url).pathname;
     <main class="main container">
         <SearchBar className="mb-10" />
         <HeaderSection className="mb-10" />
-        <PopularBooksSection className="mb-10" />
+        <PopularBooksSection className="mb-10" client:load />
         <BrowseSection className="mb-10" />
     </main>
 </Layout>

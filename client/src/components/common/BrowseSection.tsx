@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import BookItem from "./BookItem";
 
 const BrowseSection: React.FC<{ className?: string }> = ({ className }) => {
