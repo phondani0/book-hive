@@ -50,17 +50,15 @@ func initMongo() {
 	db = client.Database(os.Getenv("DATABASE_NAME"))
 }
 
-func main() {
-	initMongo()
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-	http.HandleFunc("/api/books", getBooksHandler)
-
-	fmt.Println("Server started at port 4500")
-	err := http.ListenAndServe(":4500", nil)
-
-	if err != nil {
-		fmt.Printf("error starting server: %v\n", err)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +66,12 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	collection := db.Collection("books")
 
 	// Define a filter (optional)
-	// filter := bson.D{{"publication_year", bson.D{{"$gte", "2020"}}}}
+	filter := bson.D{
+		{"publication_year", bson.D{
+			{"$gte", 2020},
+			{"$lt", 2025},
+		}},
+	}
 
 	page := 1
 	pageSize := 20
@@ -79,7 +82,7 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	// .SetSort(bson.D{{"title", 1}}) // @TODO: Sort is leading to very slow response
 
 	// Perform the query
-	cursor, err := collection.Find(context.Background(), bson.D{}, options)
+	cursor, err := collection.Find(context.Background(), filter, options)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching books: %v", err), http.StatusInternalServerError)
 		return
@@ -97,9 +100,27 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 		books = append(books, book)
 	}
 
+	response := map[string]interface{}{
+		"data":       books,
+		"totalCount": len(books),
+	}
+
 	// Return the results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(books); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
+	}
+}
+
+func main() {
+	initMongo()
+
+	http.Handle("/api/books", corsMiddleware(http.HandlerFunc(getBooksHandler)))
+
+	fmt.Println("Server started at port 4500")
+	err := http.ListenAndServe(":4500", nil)
+
+	if err != nil {
+		fmt.Printf("error starting server: %v\n", err)
 	}
 }
