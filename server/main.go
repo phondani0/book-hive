@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -37,31 +36,31 @@ func initMongo() {
 
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		log.Fatalf("Failed to initiate MongoDB connection: %v", err)
 	}
 
-	println("Connected to MongoDB")
-	db = client.Database("bookhive")
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB server: %v", err)
+	}
+
+	println("Successfully connected to MongoDB!")
+	db = client.Database(os.Getenv("DATABASE_NAME"))
 }
 
 func main() {
 	initMongo()
 
-	http.HandleFunc("/hello", getHello)
-	http.HandleFunc("/books", getBooksHandler)
+	http.HandleFunc("/api/books", getBooksHandler)
 
-	fmt.Println("server started at port 4500")
+	fmt.Println("Server started at port 4500")
 	err := http.ListenAndServe(":4500", nil)
 
 	if err != nil {
 		fmt.Printf("error starting server: %v\n", err)
 	}
-}
-
-func getHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got /hello request\n")
-	io.WriteString(w, "Hello, Hello!\n")
 }
 
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +71,7 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	// filter := bson.D{{"publication_year", bson.D{{"$gte", "2020"}}}}
 
 	page := 1
-	pageSize := 10
+	pageSize := 20
 	skip := (pageSize * (page - 1))
 
 	// Define options (limit, skip, and sorting)
