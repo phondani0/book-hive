@@ -11,9 +11,9 @@ const BookItem: React.FC<BookItemProps> = ({ name, imageUrl }) => {
             <img
                 src={imageUrl}
                 alt="Book cover"
-                className="w-full h-48 object-cover rounded-md mb-2"
+                className="w-full h-48 object-cover rounded-md mb-2 border shadow-sm"
             />
-            <h3 className="text-lg font-bold">{name}</h3>
+            <h3 className="text-sm italic">{name}</h3>
         </div>
     );
 };

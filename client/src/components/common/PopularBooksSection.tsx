@@ -8,10 +8,21 @@ const PopularBooksSection = ({ className }: { className?: string }) => {
 
     useEffect(() => {
         const fetchBooks = async () => {
-            const response = await fetch(import.meta.env.PUBLIC_API_URL);
-            const data = await response.json();
+            try {
+                const response = await fetch(
+                    `${import.meta.env.PUBLIC_API_URL}/books`
+                );
 
-            setBooks(data);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const { data } = await response.json();
+                setBooks([...(data || [])]);
+            } catch (error) {
+                console.error("Error fetching books:", error);
+                setBooks([]);
+            }
         };
 
         fetchBooks();
@@ -24,12 +35,12 @@ const PopularBooksSection = ({ className }: { className?: string }) => {
                     <div className="mb-5">
                         <h2 className="text-2xl font-bold">Popular Books</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-10 gap-y-8">
                         {books.map((book, index) => (
                             <BookItem
                                 key={index}
-                                name={book.title}
-                                imageUrl={"https://picsum.photos/200/400"}
+                                name={`${book.title} (${book.publication_year})`}
+                                imageUrl={book.image_url}
                             />
                         ))}
                     </div>
