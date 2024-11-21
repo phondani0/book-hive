@@ -1,10 +1,12 @@
 ---
+import NavBar from "@/components/common/NavBar";
 import "@/styles/globals.css";
 interface Props {
     title: string;
 }
 
 const { title } = Astro.props;
+const pathname = new URL(Astro.request.url).pathname;
 ---
 
 <!doctype html>
@@ -24,6 +26,7 @@ const { title } = Astro.props;
         <title>{title}</title>
     </head>
     <body>
+        <NavBar className="my-8" activeRoute={pathname} />
         <slot />
     </body>
 </html>

@@ -1,10 +1,12 @@
 ---
 import SearchResults from "@/components/common/SearchResults";
 import Layout from "../layouts/Layout.astro";
+import SearchBar from "@/components/common/SearchBar";
 ---
 
 <Layout title="Search Results">
     <main class="container">
+        <SearchBar className="mb-10" client:load />
         <SearchResults client:load />
     </main>
 </Layout>

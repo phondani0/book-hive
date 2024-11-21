@@ -19,7 +19,7 @@ const SearchResults: React.FC = () => {
                         import.meta.env.PUBLIC_API_URL
                     }/books?${new URLSearchParams({
                         offset: "0",
-                        limit: "10",
+                        limit: "50",
                         search: query,
                     })}`
                 );

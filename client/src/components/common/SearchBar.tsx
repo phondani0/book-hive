@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 
 const SearchBar = ({ className }: { className?: string }) => {
     const [searchInput, setSearchInput] = useState("");
-    const params = new URLSearchParams();
-
-    const query = params.get("query") || "";
 
     useEffect(() => {
-        setSearchInput(query || "");
-    }, [query]);
+        const params = new URLSearchParams(window.location.search);
+        const query = params.get("query") || "";
+        setSearchInput(query);
+    }, []);
 
     const handleSearch = () => {
+        const params = new URLSearchParams(window.location.search);
         params.set("query", searchInput);
 
         const newUrl = `/search?${params.toString()}`;
@@ -23,6 +23,10 @@ const SearchBar = ({ className }: { className?: string }) => {
         if (e.key === "Enter") {
             handleSearch();
         }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchInput(e.target.value);
     };
 
     return (
@@ -48,7 +52,7 @@ const SearchBar = ({ className }: { className?: string }) => {
                     placeholder="Search books..."
                     className="w-full py-2 pl-10 pr-4 text-sm bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-gray-200 transition-all"
                     value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+                    onChange={handleChange}
                     onKeyDown={handleKeyPress}
                 />
             </section>
