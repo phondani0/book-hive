@@ -104,7 +104,7 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 		filter = append(filter, bson.E{
 			Key: "$text",
 			Value: bson.D{
-				{Key: "$search", Value: search},
+				{Key: "$search", Value: fmt.Sprintf(`"%s"`, search)},
 			},
 		})
 	}
