@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -61,24 +64,80 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func validateRequest(params url.Values) error {
+	var errors []string
+
+	if offset, err := strconv.Atoi(params.Get("offset")); err != nil || offset < 0 {
+		errors = append(errors, "offset must be a non-negative number")
+	}
+
+	if limit, err := strconv.Atoi(params.Get("limit")); err != nil || limit < 1 || limit > 1000 {
+		errors = append(errors, "limit must be between 1 and 1000")
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("validation failed: %v", strings.Join(errors, ", "))
+	}
+	return nil
+}
+
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	// Use the global db object to access the collection
 	collection := db.Collection("books")
 
-	// Define a filter (optional)
-	filter := bson.D{
-		{"publication_year", bson.D{
-			{"$gte", 2020},
-			{"$lt", 2025},
-		}},
+	queryParams := r.URL.Query()
+	err := validateRequest(queryParams)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Validation failed: %v", err), http.StatusBadRequest)
+		return
 	}
 
-	page := 1
-	pageSize := 20
-	skip := (pageSize * (page - 1))
+	offset, _ := strconv.ParseInt(queryParams.Get("offset"), 10, 64)
+	limit, _ := strconv.ParseInt(queryParams.Get("limit"), 10, 64)
+	search := queryParams.Get("search")
+	authors := queryParams.Get("authors")
+
+	// Define a filter (optional)
+	filter := bson.D{}
+
+	if search != "" {
+		filter = append(filter, bson.E{
+			Key: "$text",
+			Value: bson.D{
+				{Key: "$search", Value: search},
+			},
+		})
+	}
+
+	if publishedAfter := queryParams.Get("published-after"); publishedAfter != "" {
+		if publishedAfter, err := strconv.Atoi(publishedAfter); err == nil {
+			filter = append(filter, bson.E{
+				Key:   "publication_year",
+				Value: bson.D{{Key: "$gte", Value: publishedAfter}},
+			})
+		}
+	}
+
+	if publishedBefore := queryParams.Get("published-before"); publishedBefore != "" {
+		if publishedBefore, err := strconv.Atoi(publishedBefore); err == nil {
+			filter = append(filter, bson.E{
+				Key:   "publication_year",
+				Value: bson.D{{Key: "$lte", Value: publishedBefore}},
+			})
+		}
+	}
+
+	if authors != "" {
+		authorsList := strings.Split(authors, ",")
+
+		filter = append(filter, bson.E{
+			Key:   "authors",
+			Value: bson.D{{Key: "$in", Value: authorsList}},
+		})
+	}
 
 	// Define options (limit, skip, and sorting)
-	options := options.Find().SetLimit(int64(pageSize)).SetSkip(int64(skip))
+	options := options.Find().SetLimit(limit).SetSkip(offset)
 	// .SetSort(bson.D{{"title", 1}}) // @TODO: Sort is leading to very slow response
 
 	// Perform the query
@@ -102,6 +161,8 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := map[string]interface{}{
 		"data":       books,
+		"offset":     offset,
+		"limit":      limit,
 		"totalCount": len(books),
 	}
 
