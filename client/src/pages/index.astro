@@ -9,10 +9,10 @@ import BrowseSection from "@/components/common/BrowseSection";
 const pathname = new URL(Astro.request.url).pathname;
 ---
 
-<Layout title="Welcome to Astro.">
+<Layout title="BookHive">
     <NavBar className="mt-8" activeRoute={pathname} />
     <main class="main container">
-        <SearchBar className="mb-10" />
+        <SearchBar className="mb-10" client:load />
         <HeaderSection className="mb-10" />
         <PopularBooksSection className="mb-10" client:load />
         <BrowseSection className="mb-10" />
