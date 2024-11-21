@@ -5,14 +5,11 @@ import HeaderSection from "@/components/common/HeaderSection";
 import SearchBar from "@/components/common/SearchBar";
 import NavBar from "@/components/common/NavBar";
 import BrowseSection from "@/components/common/BrowseSection";
-
-const pathname = new URL(Astro.request.url).pathname;
 ---
 
-<Layout title="Welcome to Astro.">
-    <NavBar className="mt-8" activeRoute={pathname} />
+<Layout title="BookHive">
     <main class="main container">
-        <SearchBar className="mb-10" />
+        <SearchBar className="mb-10" client:load />
         <HeaderSection className="mb-10" />
         <PopularBooksSection className="mb-10" client:load />
         <BrowseSection className="mb-10" />
@@ -22,6 +19,6 @@ const pathname = new URL(Astro.request.url).pathname;
 <style>
     .main {
         background-color: rgba(240, 238, 226, 1);
-        padding: 30px 0px;
+        padding-bottom: 30px;
     }
 </style>

@@ -9,8 +9,15 @@ const PopularBooksSection = ({ className }: { className?: string }) => {
     useEffect(() => {
         const fetchBooks = async () => {
             try {
+                const params = new URLSearchParams({
+                    offset: "0",
+                    limit: "10",
+                });
+
                 const response = await fetch(
-                    `${import.meta.env.PUBLIC_API_URL}/books`
+                    `${
+                        import.meta.env.PUBLIC_API_URL
+                    }/books?${params.toString()}`
                 );
 
                 if (!response.ok) {
