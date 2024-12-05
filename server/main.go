@@ -90,6 +90,7 @@ type Author struct {
 type Book struct {
 	ID              string   `bson:"_id" json:"id"` // Map `_id` to `id`
 	Title           string   `json:"title"`
+	Description     string   `json:"description"`
 	Authors         []Author `json:"authors"`
 	Isbn            string   `json:"isbn"`
 	PublicationYear int      `bson:"publication_year" json:"publication_year"`

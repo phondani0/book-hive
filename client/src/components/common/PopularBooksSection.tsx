@@ -42,7 +42,7 @@ const PopularBooksSection = ({ className }: { className?: string }) => {
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold">Popular Books</h2>
                     </div>
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-16 gap-y-12">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-16 gap-y-12">
                         {books.map((book, index) => (
                             <BookItem
                                 key={index}

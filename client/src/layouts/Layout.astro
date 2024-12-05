@@ -27,7 +27,9 @@ const pathname = new URL(Astro.request.url).pathname;
     </head>
     <body>
         <NavBar className="my-8" activeRoute={pathname} />
-        <slot />
+        <div class="mb-12 lg:px-20">
+            <slot />
+        </div>
     </body>
 </html>
 <style is:global>
