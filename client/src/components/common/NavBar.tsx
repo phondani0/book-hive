@@ -5,6 +5,7 @@ const NAVIGATION_ITEMS = [
     { label: "Home", path: "/" },
     { label: "Bookmarks", path: "/bookmarks" },
     { label: "About", path: "/about" },
+    { label: "Search", path: "/search" },
 ];
 
 const NavBar: React.FC<{ activeRoute: string; className?: string }> = ({

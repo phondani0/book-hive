@@ -39,13 +39,14 @@ const PopularBooksSection = ({ className }: { className?: string }) => {
         <section className={clsx(className)}>
             {books.length > 0 && (
                 <>
-                    <div className="mb-5">
+                    <div className="mb-8">
                         <h2 className="text-2xl font-bold">Popular Books</h2>
                     </div>
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-10 gap-y-8">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-16 gap-y-12">
                         {books.map((book, index) => (
                             <BookItem
                                 key={index}
+                                id={book.id}
                                 name={`${book.title} (${book.publication_year})`}
                                 imageUrl={book.image_url}
                             />
