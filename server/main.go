@@ -14,6 +14,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -79,6 +80,21 @@ func validateRequest(params url.Values) error {
 		return fmt.Errorf("validation failed: %v", strings.Join(errors, ", "))
 	}
 	return nil
+}
+
+type Author struct {
+	AuthorID string `bson:"author_id" json:"author_id"`
+	Role     string `json:"role"`
+}
+
+type Book struct {
+	ID              string   `bson:"_id" json:"id"` // Map `_id` to `id`
+	Title           string   `json:"title"`
+	Description     string   `json:"description"`
+	Authors         []Author `json:"authors"`
+	Isbn            string   `json:"isbn"`
+	PublicationYear int      `bson:"publication_year" json:"publication_year"`
+	ImageUrl        string   `bson:"image_url" json:"image_url"`
 }
 
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
@@ -149,9 +165,9 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	defer cursor.Close(context.Background())
 
 	// Fetch the books into a slice
-	var books []bson.M
+	var books []Book
 	for cursor.Next(context.Background()) {
-		var book bson.M
+		var book Book
 		if err := cursor.Decode(&book); err != nil {
 			http.Error(w, fmt.Sprintf("Error decoding book: %v", err), http.StatusInternalServerError)
 			return
@@ -173,10 +189,54 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getBookByIdHandler(w http.ResponseWriter, req *http.Request) {
+
+	collection := db.Collection("books")
+	bookId := strings.TrimPrefix(req.URL.Path, "/api/books/")
+
+	if bookId == "" {
+		http.Error(w, "Book ID is required", http.StatusBadRequest)
+		return
+	}
+
+	objectId, objectIdErr := primitive.ObjectIDFromHex(bookId)
+	if objectIdErr != nil {
+		http.Error(w, "Invalid Book ID format", http.StatusBadRequest)
+	}
+
+	var book Book
+	err := collection.FindOne(context.Background(), bson.D{
+		bson.E{
+			Key:   "_id",
+			Value: objectId,
+		},
+	}).Decode(&book)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// No document found
+			http.Error(w, "Book not found", http.StatusNotFound)
+		} else {
+			// Internal server error
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(book); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+
+}
+
 func main() {
 	initMongo()
 
 	http.Handle("/api/books", corsMiddleware(http.HandlerFunc(getBooksHandler)))
+	http.Handle("/api/books/{id}", corsMiddleware(http.HandlerFunc(getBookByIdHandler)))
 
 	fmt.Println("Server started at port 4500")
 	err := http.ListenAndServe(":4500", nil)

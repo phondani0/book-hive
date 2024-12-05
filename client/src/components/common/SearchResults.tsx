@@ -38,12 +38,13 @@ const SearchResults: React.FC = () => {
     }, []);
 
     return (
-        <section>
+        <section className="mt-16">
             {results.length > 0 ? (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-10 gap-y-8">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-16 gap-y-12">
                     {results.map((book, index) => (
                         <BookItem
                             key={index}
+                            id={book.id}
                             name={`${book.title} (${book.publication_year})`}
                             imageUrl={book.image_url}
                         />
