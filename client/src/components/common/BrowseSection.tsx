@@ -8,18 +8,22 @@ const BrowseSection: React.FC<{ className?: string }> = ({ className }) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <BookItem
+                    id="01"
                     name="Book 1"
                     imageUrl={"https://picsum.photos/200/400"}
                 />
                 <BookItem
+                    id="02"
                     name="Book 2"
                     imageUrl={"https://picsum.photos/200/400"}
                 />
                 <BookItem
+                    id="03"
                     name="Book 3"
                     imageUrl={"https://picsum.photos/200/400"}
                 />
                 <BookItem
+                    id="04"
                     name="Book 4"
                     imageUrl={"https://picsum.photos/200/400"}
                 />

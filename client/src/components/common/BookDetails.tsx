@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ApiResponse, Book, FCWithSkeleton } from "@/types/global";
-import { Skeleton } from "../ui/skeleton";
-import BookItem from "./BookItem";
+import { Skeleton } from "../ui/Skeleton";
 import { API_STATUS } from "@/types/enums";
 
 const BookDetails: FCWithSkeleton = () => {
