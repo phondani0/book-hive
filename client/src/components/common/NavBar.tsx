@@ -19,6 +19,7 @@ const NavBar: React.FC<{ activeRoute: string; className?: string }> = ({
                     key={path}
                     className={clsx("italic", {
                         "font-bold": activeRoute === path,
+                        "border-b-2 border-b-black": activeRoute === path,
                     })}
                     navigateTo={path}
                 >

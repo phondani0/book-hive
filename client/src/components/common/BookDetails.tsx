@@ -53,25 +53,39 @@ const BookDetails: FCWithSkeleton = () => {
     }
 
     return (
-        <section className="container flex justify-center mt-10">
-            <div className="flex justify-center gap-16 w-[65%]">
-                <div className={"w-64"}>
-                    <img
-                        src={bookResponse.data.image_url}
-                        alt="Book cover"
-                        className={"w-96 h-auto object-cover rounded-md mb-8"}
-                        style={{
-                            boxShadow: "rgb(0 0 0 / 57%) -7px 9px 14px 0px",
-                        }}
-                    />
-                </div>
-
-                <div className="flex-1">
-                    <h1 className="text-5xl">{bookResponse.data.title}</h1>
-
-                    <div className="text-gray-500 mt-8">
-                        {bookResponse.data.description}
+        <section
+            className="container mt-10 flex flex-col"
+            style={{
+                minHeight: "calc(100vh - 9rem)",
+            }}
+        >
+            <div className="flex flex-col items-center min-h-52">
+                <div className="flex justify-center gap-16 w-[65%]">
+                    <div className="w-64 relative">
+                        <img
+                            className="w-auto object-cover rounded-md mb-8 absolute h-[23.5rem] shadow-4xl"
+                            src={bookResponse.data.image_url}
+                            alt="Book cover"
+                        />
                     </div>
+
+                    <div className="flex-1">
+                        <h1 className="text-4xl leading-[3rem]">
+                            {bookResponse.data.title}
+                        </h1>
+
+                        <div className="text-gray-500 mt-8 line-clamp-2">
+                            {bookResponse.data.description}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-white flex-grow overflow-auto mt-8 p-40 pt-52">
+                <h3 className="text-2xl font-semibold mb-4 text-gray-600">
+                    Description
+                </h3>
+                <div className="text-sm text-gray-600 tracking-wider leading-6">
+                    {bookResponse.data.description}
                 </div>
             </div>
         </section>
